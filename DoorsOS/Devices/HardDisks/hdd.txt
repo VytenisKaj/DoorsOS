@@ -1,0 +1,21 @@
+$$$$
+Loop
+$AMJ
+CODE
+MOVE 0004
+JUMP
+HALT 
+$END
+$$$$
+Suma
+$AMJ
+DATA
+0017
+0005
+Atsakymas:
+CODE
+MOVE 0000
+MVCH
+MVTR
+HALT
+$END
