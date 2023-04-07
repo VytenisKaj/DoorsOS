@@ -20,10 +20,10 @@ namespace DoorsOS.RealMachines
             _hardDisk = new HardDisk();
             _paginator = new Paginator(_ram, _processor);
 
-            _ram.IsBlockUsed[1] = true;
+            /*_ram.IsBlockUsed[1] = true;
             _ram.IsBlockUsed[6] = true; // For testing paginator, simulating used pages
             _ram.IsBlockUsed[9] = true;
-            _ram.IsBlockUsed[15] = true;
+            _ram.IsBlockUsed[15] = true;*/
         }
 
         public void Run()
