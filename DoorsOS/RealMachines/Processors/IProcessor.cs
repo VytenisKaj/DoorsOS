@@ -13,8 +13,13 @@ namespace DoorsOS.RealMachines.Processors
         public char Pi { get; set; }
         public char Si { get; set; }
         public char Ti { get; set; }
+        public char[] Cs { get; set; }
+        public char[] Ds { get; set; }
+
 
         char[] FromIntToHexNumber(int value);
+        char FromIntToHexNumberByte(int value);
+        char[] FromIntToHexNumberTwoBytes(int value);
         int FromHexAsCharArrayToInt(char[] hex);
     }
 }

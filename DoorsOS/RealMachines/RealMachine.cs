@@ -3,6 +3,8 @@ using DoorsOS.OS.Constants;
 using DoorsOS.Paginators;
 using DoorsOS.RealMachines.Memories;
 using DoorsOS.RealMachines.Processors;
+using DoorsOS.VirtualMachines;
+using System.Text;
 
 namespace DoorsOS.RealMachines
 {
@@ -12,6 +14,7 @@ namespace DoorsOS.RealMachines
         private readonly IRam _ram;
         private readonly IHardDisk _hardDisk;
         private readonly IPaginator _paginator;
+        private readonly List<IVirtualMachine> _virtualMachines = new();
 
         public RealMachine()
         {
@@ -44,6 +47,11 @@ namespace DoorsOS.RealMachines
                         if (commandAndParameters?.Length > 1)
                         {
                             ExecuteRun(commandAndParameters[1].Trim());
+                            while (!_virtualMachines[0].IsFinished)
+                            {
+                                _virtualMachines[0].ExecuteInstruction();
+                                Console.WriteLine(_processor.Ti);
+                            }
                         }
                         else
                         {
@@ -127,6 +135,10 @@ namespace DoorsOS.RealMachines
         {
             _paginator.GetPages();
             MoveFromSupervizorMemoryToDedicatedPages();
+            _processor.Cs = _processor.FromIntToHexNumberTwoBytes(codeSegment);
+            _processor.Ds = _processor.FromIntToHexNumberTwoBytes(dataSegment);
+            _processor.Ti = 'F';
+            _virtualMachines.Add(new VirtualMachine(_processor, this));
         }
 
         private void MoveFromSupervizorMemoryToDedicatedPages()
@@ -137,6 +149,43 @@ namespace DoorsOS.RealMachines
                 var pageLocation = _ram.GetMemoryAsInt(ptrValue, i * OsConstants.WordLenghtInBytes);
                 _ram.SetMemoryPage(pageLocation, _ram.GetSupervizoryMemoryPage(i));
             }
+        }
+
+        public char ReadVirtualMachineMemoryByte(int block, int index)
+        {
+            var ptrValue = _processor.FromHexAsCharArrayToInt(_processor.Ptr);
+            var realBlock = _ram.GetMemoryAsInt(ptrValue + block * OsConstants.WordLenghtInBytes, 0);
+            return _ram.GetMemoryByte(realBlock, index);
+        }
+
+        public string ReadVirtualMachineMemoryBytes(int block, int index, int numberOfBytes)
+        {
+            var sb = new StringBuilder(numberOfBytes);
+            for (int i = 0; i < numberOfBytes; i++)
+            {
+                sb.Append(ReadVirtualMachineMemoryByte(block, index + i));
+            }
+            return sb.ToString();
+        }
+
+        public string ReadVirtualMachineMemoryWord(int block, int index)
+        {
+            return ReadVirtualMachineMemoryBytes(block, index, OsConstants.WordLenghtInBytes);
+        }
+
+        public void WriteVirtualMachineMemoryByte(int block, int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteVirtualMachineMemoryBytes(int block, int index, int numberOfBytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteVirtualMachineMemoryWord(int block, int index)
+        {
+            throw new NotImplementedException();
         }
     }
 }

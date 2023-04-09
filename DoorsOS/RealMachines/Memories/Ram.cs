@@ -1,4 +1,5 @@
 ﻿using DoorsOS.OS.Constants;
+using System.Text;
 
 namespace DoorsOS.RealMachines.Memories
 {
@@ -32,12 +33,12 @@ namespace DoorsOS.RealMachines.Memories
 
         public string GetMemoryBytes(int block, int index, int numberOfBytes)
         {
-            string result = "";
+            var sb = new StringBuilder(numberOfBytes);
             for (int i = 0; i < numberOfBytes; i++)
             {
-                result += GetMemoryByte(block, index + i);
+                sb.Append(GetMemoryByte(block, index + i));
             }
-            return result;
+            return sb.ToString();
         }
 
         public string GetMemoryWord(int block, int index)
@@ -81,12 +82,12 @@ namespace DoorsOS.RealMachines.Memories
 
         public string GetSupervizorMemoryBytes(int block, int index, int numberOfBytes)
         {
-            string result = "";
+            var sb = new StringBuilder(numberOfBytes);
             for (int i = 0; i < numberOfBytes; i++)
             {
-                result += GetSupervizorMemoryByte(block, index + i);
+                sb.Append(GetSupervizorMemoryByte(block, index + i));
             }
-            return result;
+            return sb.ToString();
         }
 
         public string GetSupervizorMemoryWord(int block, int index)
@@ -117,22 +118,22 @@ namespace DoorsOS.RealMachines.Memories
         public string GetSupervizoryMemoryPage(int block)
         {
             //return GetMemoryPage(SupervisorMemoryStart() + block);
-            string result = "";
+            var sb = new StringBuilder(OsConstants.BlockSize);
             for (int i = 0; i < OsConstants.PageSize; i++)
             {
-                result += GetSupervizorMemoryWord(block, i * OsConstants.WordLenghtInBytes);
+                sb.Append(GetSupervizorMemoryWord(block, i * OsConstants.WordLenghtInBytes));
             }
-            return result;
+            return sb.ToString();
         }
 
         public string GetMemoryPage(int block)
         {
-            string result = "";
+            var sb = new StringBuilder(OsConstants.BlockSize);
             for (int i = 0; i < OsConstants.PageSize; i++)
             {
-                result += GetMemoryWord(block, i * OsConstants.WordLenghtInBytes);
+                sb.Append(GetMemoryWord(block, i * OsConstants.WordLenghtInBytes));
             }
-            return result;
+            return sb.ToString();
         }
     }
 }
