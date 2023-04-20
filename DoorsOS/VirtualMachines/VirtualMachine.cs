@@ -32,39 +32,54 @@ namespace DoorsOS.VirtualMachines
             switch (instruction)
             {
                 case Instructions.Comp:
+                    ExecuteCompInstruction();
                     break;
                 case Instructions.Jmpa:
+                    ExecuteJmpaInstruction();
                     break;
                 case Instructions.Jmpb:
+                    ExecuteJmpbInstruction();
                     break;
                 case Instructions.Jmpe:
+                    ExecuteJmpeInstruction();
                     break;
                 case Instructions.Jmne:
+                    ExecuteJmneInstruction();
                     break;
                 case Instructions.Jump:
                     ExecuteJumpInstructon();
                     break;
                 case Instructions.Addi:
+                    ExecuteAddiInstruction();
                     break;
                 case Instructions.Subs:
+                    ExecuteSubsInstruction();
                     break;
                 case Instructions.Divi:
+                    ExecuteDiviInstruction();
                     break;
                 case Instructions.Mult:
+                    ExecuteMultiInstruction();
                     break;
                 case Instructions.Move:
                     ExecuteMoveInstruction(block, index);
                     break;
                 case Instructions.Mvtr:
+                    ExecuteMvtrInstruction();
                     break;
                 case Instructions.Mvtm:
+                    ExecuteMvtmInstruction();
                     break;
                 case Instructions.Mvch:
+                    ExecuteMvchInstruction();
+                    break;
+                case Instructions.Mmem:
                     break;
                 case Instructions.Halt:
                     ExecuteHaltInstruction();
                     break;
                 case Instructions.Exec:
+                    // Implement me
                     break;
                 case Instructions.Rdin:
                     break;
@@ -85,13 +100,6 @@ namespace DoorsOS.VirtualMachines
             _processor.Ti = _processor.FromIntToHexNumberByte(0);
         }
 
-        private void ExecuteJumpInstructon()
-        {DecrementTi();
-            int r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
-            _processor.Ic = _processor.FromIntToHexNumberTwoBytes(r1Value);
-            
-        }
-
         private void ExecuteMoveInstruction(int block, int index)
         {
             string extraByte = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + OsConstants.WordLenghtInBytes);
@@ -99,6 +107,193 @@ namespace DoorsOS.VirtualMachines
             int icValue = _processor.FromHexAsCharArrayToInt(_processor.Ic);
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(icValue + 2 * OsConstants.WordLenghtInBytes);
             DecrementTi();
+        }
+
+        private void ExecuteMvtrInstruction()
+        {
+            var block = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[2] });
+            var index = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[3] });
+            _processor.R1 = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index).ToArray();
+            DecrementTi();
+        }
+
+        private void ExecuteMvtmInstruction()
+        {
+            var block = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[2] });
+            var index = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[3] });
+            _memoryManagementUnit.WriteVirtualMachineMemoryWord(block, index, _processor.R1.ToString()!);
+            DecrementTi();
+        }
+
+        private void ExecuteMvchInstruction()
+        {
+            (_processor.R2, _processor.R1) = (_processor.R1, _processor.R2);
+            DecrementTi();
+        }
+
+        private void ExecuteCompInstruction()
+        {
+            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
+            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            if (r1Value == r2Value )
+            {
+                _processor.SetZeroFlag();
+            }
+            else if (r1Value < r2Value )
+            {
+                _processor.SetCarryFlag();
+                _processor.SetZeroFlag(true);
+            }
+            else if (r1Value > r2Value)
+            {
+                _processor.SetCarryFlag(true);
+                _processor.SetZeroFlag(true);
+            }
+            else
+            {
+                _processor.SetZeroFlag(true);
+            }
+            DecrementTi();
+        }
+
+        private void ExecuteJumpInstructon()
+        {
+            int r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
+            _processor.Ic = _processor.FromIntToHexNumberTwoBytes(r1Value);
+            DecrementTi();
+        }
+
+        private void ExecuteJmpaInstruction()
+        {
+            if (_processor.C[2] == '0' && _processor.C[3] == '0')
+            {
+                ExecuteJumpInstructon();
+            }
+            else
+            {
+                DecrementTi();
+            }
+        }
+        private void ExecuteJmpbInstruction()
+        {
+            if (_processor.C[2] == '1' && _processor.C[3] == '0')
+            {
+                ExecuteJumpInstructon();
+            }
+            else
+            {
+                DecrementTi();
+            }
+        }
+
+        private void ExecuteJmpeInstruction()
+        {
+            if (_processor.C[3] == '1')
+            {
+                ExecuteJumpInstructon();
+            }
+            else
+            {
+                DecrementTi();
+            }
+        }
+
+        private void ExecuteJmneInstruction()
+        {
+            if (_processor.C[3] == '0')
+            {
+                ExecuteJumpInstructon();
+            }
+            else
+            {
+                DecrementTi();
+            }
+        }
+
+        private void ExecuteAddiInstruction()
+        {
+            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
+            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+
+            var result = r1Value + r2Value;
+            uint uintResult = (uint)r1Value + (uint)r2Value;
+
+            SetFlags(result, uintResult);
+
+            _processor.R1 = _processor.FromIntToHexNumber(result);
+
+            DecrementTi();
+        }
+
+        private void ExecuteMultiInstruction()
+        {
+            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
+            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+
+            var result = r1Value * r2Value;
+            uint uintResult = (uint)r1Value * (uint)r2Value;
+
+            SetFlags(result, uintResult);
+
+            _processor.R1 = _processor.FromIntToHexNumber(result);
+
+            DecrementTi();
+        }
+
+        private void ExecuteSubsInstruction()
+        {
+            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
+            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+
+            var result = r1Value - r2Value;
+            uint uintResult = (uint)r1Value - (uint)r2Value;
+
+            SetFlags(result, uintResult);
+
+            _processor.R1 = _processor.FromIntToHexNumber(result);
+
+            DecrementTi();
+        }
+
+        private void ExecuteDiviInstruction()
+        {
+            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
+            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+
+            var quotient = r1Value / r2Value;
+            var remainder = r1Value % r2Value;
+
+            if (quotient == 0)
+            {
+                _processor.SetZeroFlag();
+            }
+            if (remainder != 0)
+            {
+                _processor.SetCarryFlag();
+            }
+
+            _processor.R1 = _processor.FromIntToHexNumber(quotient);
+            _processor.R2 = _processor.FromIntToHexNumber(remainder);
+
+            DecrementTi();
+        }
+
+        private void SetFlags(int result, uint uintResult)
+        {
+            if (result == 0)
+            {
+                _processor.SetZeroFlag();
+            }
+
+            if (result > Int32.MaxValue || result < Int32.MinValue)
+            {
+                _processor.SetOverflowFlag();
+            }
+
+            if (uintResult > uint.MaxValue)
+            {
+                _processor.SetCarryFlag();
+            }
         }
 
         private void DecrementTi()

@@ -16,6 +16,7 @@
         public const string Mvtm = "MVTM";
         public const string Mvch = "MVCH";
         public const string Move = "MOVE";
+        public const string Mmem = "MMEM";
         public const string Halt = "HALT";
         public const string Exec = "EXEC";
         public const string Rdin = "RDIN";
