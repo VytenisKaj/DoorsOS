@@ -1,4 +1,5 @@
 ﻿using DoorsOS.Devices.HardDisks;
+using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
 using DoorsOS.Paginators;
 using DoorsOS.RealMachines.Memories;
@@ -14,6 +15,7 @@ namespace DoorsOS.RealMachines
         private readonly IRam _ram;
         private readonly IHardDisk _hardDisk;
         private readonly IPaginator _paginator;
+        private readonly IMemoryManagementUnit _memoryManagementUnit;
         private readonly List<IVirtualMachine> _virtualMachines = new();
 
         public RealMachine()
@@ -22,6 +24,7 @@ namespace DoorsOS.RealMachines
             _ram = new Ram();
             _hardDisk = new HardDisk();
             _paginator = new Paginator(_ram, _processor);
+            _memoryManagementUnit = new MemoryManagementUnit(_processor, _ram);
 
             /*_ram.IsBlockUsed[1] = true;
             _ram.IsBlockUsed[6] = true; // For testing paginator, simulating used pages
@@ -138,7 +141,7 @@ namespace DoorsOS.RealMachines
             _processor.Cs = _processor.FromIntToHexNumberTwoBytes(codeSegment);
             _processor.Ds = _processor.FromIntToHexNumberTwoBytes(dataSegment);
             _processor.Ti = 'F';
-            _virtualMachines.Add(new VirtualMachine(_processor, this));
+            _virtualMachines.Add(new VirtualMachine(_processor, _memoryManagementUnit));
         }
 
         private void MoveFromSupervizorMemoryToDedicatedPages()
