@@ -1,6 +1,5 @@
 ﻿using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
-using DoorsOS.RealMachines;
 using DoorsOS.RealMachines.Processors;
 
 namespace DoorsOS.VirtualMachines

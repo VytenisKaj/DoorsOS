@@ -40,17 +40,20 @@ namespace DoorsOS.Devices.MemoryManagementUnits
         {
             var ptrValue = _processor.FromHexAsCharArrayToInt(_processor.Ptr);
             var realBlock = _ram.GetMemoryAsInt(ptrValue + block * OsConstants.WordLenghtInBytes, 0);
-            _ram
+            _ram.SetMemoryByte(realBlock, index, value);
         }
 
-        public void WriteVirtualMachineMemoryBytes(int block, int index, int numberOfBytes, string bytes)
+        public void WriteVirtualMachineMemoryBytes(int block, int index, string bytes)
         {
-            throw new NotImplementedException();
+            foreach(char value in bytes)
+            {
+                WriteVirtualMachineMemoryByte(block, index, value);
+            }
         }
 
         public void WriteVirtualMachineMemoryWord(int block, int index, string word)
         {
-            throw new NotImplementedException();
+            WriteVirtualMachineMemoryBytes(block, index, word);
         }
     }
 }
