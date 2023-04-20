@@ -1,4 +1,5 @@
-﻿using DoorsOS.OS.Constants;
+﻿using DoorsOS.Devices.MemoryManagementUnits;
+using DoorsOS.OS.Constants;
 using DoorsOS.RealMachines;
 using DoorsOS.RealMachines.Processors;
 
@@ -9,14 +10,14 @@ namespace DoorsOS.VirtualMachines
         public bool IsActive { get; set; } = true;
         public bool IsFinished { get; set; } = false;
         private readonly IProcessor _processor;
-        private readonly IRealMachine _realMachine;
+        private readonly IMemoryManagementUnit _memoryManagementUnit;
         private readonly int dataSegmentStart;
         private readonly int codeSegmentStart;
-        public VirtualMachine(IProcessor processor, IRealMachine realMachine)
+        public VirtualMachine(IProcessor processor, IMemoryManagementUnit memoryManagementUnit)
         {
             _processor = processor;
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(0);
-            _realMachine = realMachine;
+            _memoryManagementUnit = memoryManagementUnit;
             dataSegmentStart = _processor.FromHexAsCharArrayToInt(_processor.Ds);
             codeSegmentStart = _processor.FromHexAsCharArrayToInt(_processor.Cs);
         }
@@ -27,7 +28,7 @@ namespace DoorsOS.VirtualMachines
             int instructionIndex = codeSegmentStart + icValue;
             int block = instructionIndex / OsConstants.BlockSize;
             int index = instructionIndex % OsConstants.BlockSize;
-            string instruction = _realMachine.ReadVirtualMachineMemoryWord(block, index).ToUpper();
+            string instruction = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index).ToUpper();
             switch (instruction)
             {
                 case Instructions.Comp:
@@ -93,7 +94,7 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecuteMoveInstruction(int block, int index)
         {
-            string extraByte = _realMachine.ReadVirtualMachineMemoryWord(block, index + OsConstants.WordLenghtInBytes);
+            string extraByte = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + OsConstants.WordLenghtInBytes);
             _processor.R1 = extraByte.ToCharArray();
             int icValue = _processor.FromHexAsCharArrayToInt(_processor.Ic);
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(icValue + 2 * OsConstants.WordLenghtInBytes);
