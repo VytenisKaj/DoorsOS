@@ -85,10 +85,10 @@ namespace DoorsOS.VirtualMachines
         }
 
         private void ExecuteJumpInstructon()
-        {
+        {DecrementTi();
             int r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(r1Value);
-            DecrementTi();
+            
         }
 
         private void ExecuteMoveInstruction(int block, int index)
