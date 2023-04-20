@@ -2,7 +2,7 @@ $$$$
 Loop
 $AMJ
 CODE
-MOVE 0004
+MOVE 0008
 JUMP
 HALT 
 $END

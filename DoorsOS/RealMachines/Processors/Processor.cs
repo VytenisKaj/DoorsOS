@@ -13,15 +13,29 @@ namespace DoorsOS.RealMachines.Processors
         public char Pi { get; set; } = new();
         public char Si { get; set; } = new();
         public char Ti { get; set; } = new();
+        public char[] Cs { get; set; } = new char[OsConstants.WordLenghtInBytes / 2];
+        public char[] Ds { get; set; } = new char[OsConstants.WordLenghtInBytes / 2];
 
         public char[] FromIntToHexNumber(int value) // test nagative
         {
             return value.ToString("X4").ToCharArray();
         }
 
+        public char[] FromIntToHexNumberTwoBytes(int value)
+        {
+            return value.ToString("X2").ToCharArray();
+        }
+
+        public char FromIntToHexNumberByte(int value)
+        {
+            return value.ToString("X")[0];
+        }
+
         public int FromHexAsCharArrayToInt(char[] hex)
         {
             return Int32.Parse(hex, System.Globalization.NumberStyles.HexNumber);
         }
+
+        
     }
 }
