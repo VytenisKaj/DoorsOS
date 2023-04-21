@@ -41,9 +41,8 @@ namespace DoorsOS.RealMachines
             bool isRunning = true;
             while (isRunning)
             {
-                var comamndWithPamameters = Console.ReadLine();
-                var commandAndParameters = comamndWithPamameters?.Split(' ');
-                var command = commandAndParameters?[0].Trim().ToLower();
+                var (command, commandAndParameters) = _channeling.ReadAndFormatInput();
+
                 switch (command)
                 {
                     case Commands.Shutdown:
@@ -56,16 +55,16 @@ namespace DoorsOS.RealMachines
                             while (!_virtualMachines[0].IsFinished)
                             {
                                 _virtualMachines[0].ExecuteInstruction();
-                                Console.WriteLine(_processor.Ti);
+                                _channeling.WriteToConsole(_processor.Ti.ToString());
                             }
                         }
                         else
                         {
-                            Console.WriteLine("RUN command missing parameter");
+                            _channeling.WriteToConsole("RUN command missing parameter");
                         }
                         break;
                     default:
-                        Console.WriteLine($"'{command}' is not a valid commnd");
+                        _channeling.WriteToConsole($"'{command}' is not a valid commnd");
                         break;
                 }
             }

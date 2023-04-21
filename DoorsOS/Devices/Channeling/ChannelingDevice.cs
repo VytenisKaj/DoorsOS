@@ -11,12 +11,25 @@ namespace DoorsOS.Devices.Channeling
 
         // Registers
         // nustatomi is realios masinos ir isvedami i ekrana?
+
+        /// <summary>
+        /// Track, FROM which we will copy, number.
+        /// </summary>
         public char[] SB { get; set; }
+        /// <summary>
+        /// Track, TO which we will copy, number.
+        /// </summary>
         public char[] DB { get; set; }
+        /// <summary>
+        /// Object, FROM which we will copy, number.
+        /// </summary>
         public char[] ST { get; set; }
+        /// <summary>
+        /// Object, TO which we will copy, number.
+        /// </summary>
         public char[] DT { get; set; }
 
-        // Commands?
+        // Command, which channeling device itself cannot perform (does not have processor)?
         public int XCHG { get; set; }
 
         public ChannelingDevice(IRam ram)
@@ -24,6 +37,17 @@ namespace DoorsOS.Devices.Channeling
             _hardDisk = new HardDisk();
             _ram = ram;
         }
+
+        public (string command, string[] commandAndParameters) ReadAndFormatInput()
+        {
+            var commandWithParameters = Console.ReadLine();
+            var commandAndParameters = commandWithParameters?.Split(' ');
+            var command = commandAndParameters?[0].Trim().ToLower();
+
+            return (command ?? string.Empty, commandAndParameters ?? new string[] {});
+        }
+
+        public void WriteToConsole(string message) => Console.WriteLine(message);
 
         public VirtualMachineSegments Channnel(string nameToFind)
         {
