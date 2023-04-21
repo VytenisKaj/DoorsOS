@@ -4,7 +4,7 @@ using DoorsOS.RealMachines.Memories;
 
 namespace DoorsOS.Devices.Channeling
 {
-    public class ChannelingDevice
+    public class ChannelingDevice : IChannelingDevice
     {
         private readonly IHardDisk _hardDisk;
         private readonly IRam _ram;
