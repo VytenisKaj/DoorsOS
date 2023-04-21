@@ -45,9 +45,9 @@ namespace DoorsOS.Devices.MemoryManagementUnits
 
         public void WriteVirtualMachineMemoryBytes(int block, int index, string bytes)
         {
-            foreach(char value in bytes)
+            for (int i = 0; i < bytes.Length; i++)
             {
-                WriteVirtualMachineMemoryByte(block, index, value);
+                WriteVirtualMachineMemoryByte(block, index + i, bytes[i]);
             }
         }
 

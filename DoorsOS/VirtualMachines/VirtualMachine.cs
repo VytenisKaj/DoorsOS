@@ -2,6 +2,7 @@
 using DoorsOS.OS.Constants;
 using DoorsOS.RealMachines;
 using DoorsOS.RealMachines.Processors;
+using System;
 
 namespace DoorsOS.VirtualMachines
 {
@@ -71,15 +72,19 @@ namespace DoorsOS.VirtualMachines
                     ExecuteMvtmInstruction();
                     break;
                 case Instructions.Mvch:
-                    ExecuteMvchInstruction();
+                    ExecuteMvchInstruction(); // hdd line 26
                     break;
                 case Instructions.Mmem:
+                    ExecuteMmemInstruction(block, index);
                     break;
                 case Instructions.Halt:
                     ExecuteHaltInstruction();
                     break;
                 case Instructions.Exec:
                     // Implement me
+                    break;
+                case Instructions.Xchg:
+                    // Implement here?
                     break;
                 case Instructions.Rdin:
                     break;
@@ -102,7 +107,7 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecuteMoveInstruction(int block, int index)
         {
-            string extraByte = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + OsConstants.WordLenghtInBytes);
+            string extraByte = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + OsConstants.WordLenghtInBytes + dataSegmentStart);
             _processor.R1 = extraByte.ToCharArray();
             int icValue = _processor.FromHexAsCharArrayToInt(_processor.Ic);
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(icValue + 2 * OsConstants.WordLenghtInBytes);
@@ -113,21 +118,36 @@ namespace DoorsOS.VirtualMachines
         {
             var block = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[2] });
             var index = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[3] });
-            _processor.R1 = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index).ToArray();
+            _processor.R1 = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + dataSegmentStart).ToArray();
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteMvtmInstruction()
         {
             var block = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[2] });
             var index = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[3] });
-            _memoryManagementUnit.WriteVirtualMachineMemoryWord(block, index, _processor.R1.ToString()!);
+            _memoryManagementUnit.WriteVirtualMachineMemoryWord(block, index + dataSegmentStart, new string(_processor.R1));
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteMvchInstruction()
         {
             (_processor.R2, _processor.R1) = (_processor.R1, _processor.R2);
+            DecrementTi();
+            IncrementIc();
+        }
+
+        private void ExecuteMmemInstruction(int block, int index)
+        {
+            string extraByte = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + OsConstants.WordLenghtInBytes + dataSegmentStart);
+            block = _processor.FromHexAsCharArrayToInt(new char[] { extraByte[2] });
+            index = _processor.FromHexAsCharArrayToInt(new char[] { extraByte[3] });
+            _processor.R1 = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + dataSegmentStart).ToArray();
+
+            int icValue = _processor.FromHexAsCharArrayToInt(_processor.Ic);
+            _processor.Ic = _processor.FromIntToHexNumberTwoBytes(icValue + 2 * OsConstants.WordLenghtInBytes);
             DecrementTi();
         }
 
@@ -154,6 +174,7 @@ namespace DoorsOS.VirtualMachines
                 _processor.SetZeroFlag(true);
             }
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteJumpInstructon()
@@ -161,6 +182,7 @@ namespace DoorsOS.VirtualMachines
             int r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(r1Value);
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteJmpaInstruction()
@@ -172,6 +194,7 @@ namespace DoorsOS.VirtualMachines
             else
             {
                 DecrementTi();
+                IncrementIc();
             }
         }
         private void ExecuteJmpbInstruction()
@@ -183,6 +206,7 @@ namespace DoorsOS.VirtualMachines
             else
             {
                 DecrementTi();
+                IncrementIc();
             }
         }
 
@@ -195,6 +219,7 @@ namespace DoorsOS.VirtualMachines
             else
             {
                 DecrementTi();
+                IncrementIc();
             }
         }
 
@@ -207,6 +232,7 @@ namespace DoorsOS.VirtualMachines
             else
             {
                 DecrementTi();
+                IncrementIc();
             }
         }
 
@@ -223,6 +249,7 @@ namespace DoorsOS.VirtualMachines
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteMultiInstruction()
@@ -238,6 +265,7 @@ namespace DoorsOS.VirtualMachines
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteSubsInstruction()
@@ -253,6 +281,7 @@ namespace DoorsOS.VirtualMachines
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
             DecrementTi();
+            IncrementIc();
         }
 
         private void ExecuteDiviInstruction()
@@ -276,6 +305,7 @@ namespace DoorsOS.VirtualMachines
             _processor.R2 = _processor.FromIntToHexNumber(remainder);
 
             DecrementTi();
+            IncrementIc();
         }
 
         private void SetFlags(int result, uint uintResult)
@@ -300,6 +330,12 @@ namespace DoorsOS.VirtualMachines
         {
             var tiValue = Int32.Parse(_processor.Ti.ToString(), System.Globalization.NumberStyles.HexNumber);
             _processor.Ti = _processor.FromIntToHexNumberByte(--tiValue);
+        }
+
+        private void IncrementIc()
+        {
+            var icValue = _processor.FromHexAsCharArrayToInt(_processor.Ic);
+            _processor.Ic = _processor.FromIntToHexNumber(icValue + OsConstants.WordLenghtInBytes);
         }
     }
 }

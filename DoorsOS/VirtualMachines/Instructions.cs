@@ -23,5 +23,6 @@
         public const string Ptin = "PTIN";
         public const string Rdch = "RDCH";
         public const string Ptch = "PTCH";
+        public const string Xchg = "XCHG";
     }
 }
