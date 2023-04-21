@@ -1,4 +1,5 @@
-﻿using DoorsOS.Devices.HardDisks;
+﻿using DoorsOS.Devices.Channeling;
+using DoorsOS.Devices.HardDisks;
 using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
 using DoorsOS.Paginators;
@@ -17,6 +18,7 @@ namespace DoorsOS.RealMachines
         private readonly IPaginator _paginator;
         private readonly IMemoryManagementUnit _memoryManagementUnit;
         private readonly List<IVirtualMachine> _virtualMachines = new();
+        private readonly ChannelingDevice _channeling;
 
         public RealMachine()
         {
@@ -25,6 +27,7 @@ namespace DoorsOS.RealMachines
             _hardDisk = new HardDisk();
             _paginator = new Paginator(_ram, _processor);
             _memoryManagementUnit = new MemoryManagementUnit(_processor, _ram);
+            _channeling = new ChannelingDevice(_ram);
 
             /*_ram.IsBlockUsed[1] = true;
             _ram.IsBlockUsed[6] = true; // For testing paginator, simulating used pages
@@ -70,68 +73,8 @@ namespace DoorsOS.RealMachines
 
         private void ExecuteRun(string nameToFind)
         {
-            bool foundAmj = false;
-            bool nameFound = false;
-
-            int supervizorMemoryCurrentBlock = 0;
-            int supervizorCurrentByte = 0;
-            int dataSegment = 0;
-            int codeSegment = 0;
-
-            using (var reader = new StreamReader(_hardDisk.Path))
-            {
-                while (reader.Peek() >= 0)
-                {
-                    string line = reader.ReadLine();
-
-                    if (line.StartsWith("$$$$"))
-                    {
-                        foundAmj = false;
-                        nameFound = false;
-                    }
-                    else if (line == nameToFind)
-                    {
-                        nameFound = true;
-                    }
-                    else if (line == "$AMJ" && nameFound)
-                    {
-                        foundAmj = true;
-                    }
-                    else if (foundAmj && line != "$END")
-                    {
-                        line = string.Join("", line.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
-                        if (line == "CODE")
-                        {
-                            codeSegment = supervizorCurrentByte;
-                        }
-                        else if (line == "DATA")
-                        {
-                            dataSegment = supervizorCurrentByte;
-                        }
-                        else
-                        {
-                            _ram.SetSupervizorMemoryBytes(supervizorMemoryCurrentBlock, supervizorCurrentByte, line);
-                            supervizorCurrentByte += line.Length;
-                            if(supervizorCurrentByte >= OsConstants.BlockSize)
-                            {
-                                int numberOfBlocks = supervizorCurrentByte / OsConstants.BlockSize;
-                                supervizorMemoryCurrentBlock += numberOfBlocks;
-                                supervizorCurrentByte = numberOfBlocks * OsConstants.BlockSize;
-                            }
-                        }
-
-                    }
-                    else if (foundAmj && line == "$END")
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        nameFound = false;
-                    }
-                }
-            }
-            StartVirtualMachine(dataSegment, codeSegment);
+            var segmentsForVM = _channeling.Channnel(nameToFind);
+            StartVirtualMachine(segmentsForVM.DataSegment, segmentsForVM.CodeSegment);
         }
 
         private void StartVirtualMachine(int dataSegment, int codeSegment)
