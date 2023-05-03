@@ -8,7 +8,7 @@ namespace DoorsOS.RealMachines.Processors
         public char[] R1 { get; set; } = new char[OsConstants.WordLenghtInBytes];
         public char[] R2 { get; set; } = new char[OsConstants.WordLenghtInBytes];
         public char[] Ic { get; set; } = new char[OsConstants.WordLenghtInBytes / 2];
-        public char C { get; set; } = new();
+        public char[] C { get; set; } = new char[OsConstants.WordLenghtInBytes];
         public char Mode { get; set; } = new();
         public char Pi { get; set; } = new();
         public char Si { get; set; } = new();
@@ -36,6 +36,19 @@ namespace DoorsOS.RealMachines.Processors
             return Int32.Parse(hex, System.Globalization.NumberStyles.HexNumber);
         }
 
-        
+        public void SetOverflowFlag(bool toFalse = false)
+        {
+            C[1] = toFalse ? '0' : '1';
+        }
+
+        public void SetZeroFlag(bool toFalse = false)
+        {
+            C[3] = toFalse ? '0' : '1';
+        }
+
+        public void SetCarryFlag(bool toFalse = false)
+        {
+            C[2] = toFalse ? '0' : '1';
+        }
     }
 }

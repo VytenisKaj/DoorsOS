@@ -116,7 +116,7 @@ namespace DoorsOS.RealMachines
                             {
                                 int numberOfBlocks = supervizorCurrentByte / OsConstants.BlockSize;
                                 supervizorMemoryCurrentBlock += numberOfBlocks;
-                                supervizorCurrentByte = numberOfBlocks * OsConstants.BlockSize;
+                                supervizorCurrentByte -= numberOfBlocks * OsConstants.BlockSize;
                             }
                         }
 
@@ -140,7 +140,6 @@ namespace DoorsOS.RealMachines
             MoveFromSupervizorMemoryToDedicatedPages();
             _processor.Cs = _processor.FromIntToHexNumberTwoBytes(codeSegment);
             _processor.Ds = _processor.FromIntToHexNumberTwoBytes(dataSegment);
-            _processor.Ti = 'F';
             _virtualMachines.Add(new VirtualMachine(_processor, _memoryManagementUnit));
         }
 
