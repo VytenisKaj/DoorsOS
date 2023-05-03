@@ -1,8 +1,6 @@
 ﻿using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
-using DoorsOS.RealMachines;
 using DoorsOS.RealMachines.Processors;
-using System;
 
 namespace DoorsOS.VirtualMachines
 {
@@ -18,6 +16,9 @@ namespace DoorsOS.VirtualMachines
         {
             _processor = processor;
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(0);
+            _processor.Pi = InterruptConstants.PiReset;
+            _processor.Si = InterruptConstants.SiReset;
+            _processor.Ti = InterruptConstants.TiReset;
             _memoryManagementUnit = memoryManagementUnit;
             dataSegmentStart = _processor.FromHexAsCharArrayToInt(_processor.Ds);
             codeSegmentStart = _processor.FromHexAsCharArrayToInt(_processor.Cs);
@@ -72,7 +73,7 @@ namespace DoorsOS.VirtualMachines
                     ExecuteMvtmInstruction();
                     break;
                 case Instructions.Mvch:
-                    ExecuteMvchInstruction(); // hdd line 26
+                    ExecuteMvchInstruction();
                     break;
                 case Instructions.Mmem:
                     ExecuteMmemInstruction(block, index);
@@ -83,26 +84,27 @@ namespace DoorsOS.VirtualMachines
                 case Instructions.Exec:
                     // Implement me
                     break;
-                case Instructions.Xchg:
-                    // Implement here?
-                    break;
                 case Instructions.Rdin:
+                    ExecuteRdinCommand();
                     break;
                 case Instructions.Ptin:
+                    ExecutePtinCommand();
                     break;
                 case Instructions.Rdch:
+                    ExecuuteRdchCommand();
                     break;
                 case Instructions.Ptch:
+                    ExecutePtchCommand();
                     break;
                 default:
-                    throw new NotSupportedException(instruction);
+                    throw new NotSupportedException(instruction); // change to Pi interrupt?
             }
         }
 
         private void ExecuteHaltInstruction()
         {
             IsFinished = true;
-            _processor.Ti = _processor.FromIntToHexNumberByte(0);
+            _processor.Si = InterruptConstants.SiHalt;
         }
 
         private void ExecuteMoveInstruction(int block, int index)
@@ -119,24 +121,22 @@ namespace DoorsOS.VirtualMachines
             var block = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[2] });
             var index = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[3] });
             _processor.R1 = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index + dataSegmentStart).ToArray();
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteMvtmInstruction()
         {
             var block = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[2] });
             var index = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R2[3] });
+            
             _memoryManagementUnit.WriteVirtualMachineMemoryWord(block, index + dataSegmentStart, new string(_processor.R1));
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteMvchInstruction()
         {
             (_processor.R2, _processor.R1) = (_processor.R1, _processor.R2);
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteMmemInstruction(int block, int index)
@@ -173,8 +173,8 @@ namespace DoorsOS.VirtualMachines
             {
                 _processor.SetZeroFlag(true);
             }
-            DecrementTi();
-            IncrementIc();
+
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteJumpInstructon()
@@ -182,7 +182,6 @@ namespace DoorsOS.VirtualMachines
             int r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(r1Value);
             DecrementTi();
-            IncrementIc();
         }
 
         private void ExecuteJmpaInstruction()
@@ -193,8 +192,7 @@ namespace DoorsOS.VirtualMachines
             }
             else
             {
-                DecrementTi();
-                IncrementIc();
+                DoTiAndIcDefaultBehaviour();
             }
         }
         private void ExecuteJmpbInstruction()
@@ -205,8 +203,7 @@ namespace DoorsOS.VirtualMachines
             }
             else
             {
-                DecrementTi();
-                IncrementIc();
+                DoTiAndIcDefaultBehaviour();
             }
         }
 
@@ -218,8 +215,7 @@ namespace DoorsOS.VirtualMachines
             }
             else
             {
-                DecrementTi();
-                IncrementIc();
+                DoTiAndIcDefaultBehaviour();
             }
         }
 
@@ -231,8 +227,7 @@ namespace DoorsOS.VirtualMachines
             }
             else
             {
-                DecrementTi();
-                IncrementIc();
+                DoTiAndIcDefaultBehaviour();
             }
         }
 
@@ -248,8 +243,7 @@ namespace DoorsOS.VirtualMachines
 
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteMultiInstruction()
@@ -264,8 +258,7 @@ namespace DoorsOS.VirtualMachines
 
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteSubsInstruction()
@@ -280,8 +273,7 @@ namespace DoorsOS.VirtualMachines
 
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteDiviInstruction()
@@ -304,8 +296,51 @@ namespace DoorsOS.VirtualMachines
             _processor.R1 = _processor.FromIntToHexNumber(quotient);
             _processor.R2 = _processor.FromIntToHexNumber(remainder);
 
-            DecrementTi();
-            IncrementIc();
+            DoTiAndIcDefaultBehaviour();
+        }
+
+        private void ExecutePtinCommand()
+        {
+            // Set Sb to R1 value
+            // Set St to 1
+            // Set Db to 0? (output stream doesn't have pages?)
+            // Set Dt to 3
+            _processor.R2 = _processor.FromIntToHexNumber(OsConstants.WordLenghtInBytes);
+            // Call Xchg
+            DoTiAndIcDefaultBehaviour();
+        }
+
+        private void ExecuteRdinCommand()
+        {
+            // set Sb to 0?
+            // set St to 4
+            // set Db to R1
+            // set Dt to 1
+            _processor.R2 = _processor.FromIntToHexNumber(OsConstants.WordLenghtInBytes);
+            // Call Xchg
+            DoTiAndIcDefaultBehaviour();
+        }
+
+        private void ExecutePtchCommand()
+        {
+            // Set Sb to R1 value
+            // Set St to 1
+            // Set Db to 0? (output stream doesn't have pages?)
+            // Set Dt to 3
+            // R1 and R2 should be set by program
+            // Call Xchg
+            DoTiAndIcDefaultBehaviour();
+        }
+
+        private void ExecuuteRdchCommand()
+        {
+            // set Sb to 0?
+            // set St to 4
+            // set Db to R1
+            // set Dt to 1
+            // R1 and R2 should be set by program
+            // Call Xchg
+            DoTiAndIcDefaultBehaviour();
         }
 
         private void SetFlags(int result, uint uintResult)
@@ -324,6 +359,12 @@ namespace DoorsOS.VirtualMachines
             {
                 _processor.SetCarryFlag();
             }
+        }
+
+        private void DoTiAndIcDefaultBehaviour()
+        {
+            DecrementTi();
+            IncrementIc();
         }
 
         private void DecrementTi()

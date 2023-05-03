@@ -17,7 +17,7 @@ namespace DoorsOS.Devices.MemoryManagementUnits
         public char ReadVirtualMachineMemoryByte(int block, int index)
         {
             var ptrValue = _processor.FromHexAsCharArrayToInt(_processor.Ptr);
-            var realBlock = _ram.GetMemoryAsInt(ptrValue + block * OsConstants.WordLenghtInBytes, 0);
+            var realBlock = _ram.GetMemoryAsInt(ptrValue, block * OsConstants.WordLenghtInBytes);
             return _ram.GetMemoryByte(realBlock, index);
         }
 
@@ -39,7 +39,7 @@ namespace DoorsOS.Devices.MemoryManagementUnits
         public void WriteVirtualMachineMemoryByte(int block, int index, char value)
         {
             var ptrValue = _processor.FromHexAsCharArrayToInt(_processor.Ptr);
-            var realBlock = _ram.GetMemoryAsInt(ptrValue + block * OsConstants.WordLenghtInBytes, 0);
+            var realBlock = _ram.GetMemoryAsInt(ptrValue, block * OsConstants.WordLenghtInBytes);
             _ram.SetMemoryByte(realBlock, index, value);
         }
 
