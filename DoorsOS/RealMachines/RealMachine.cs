@@ -1,4 +1,5 @@
-﻿using DoorsOS.Devices.HardDisks;
+﻿using DoorsOS.Devices.Channeling;
+using DoorsOS.Devices.HardDisks;
 using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
 using DoorsOS.Paginators;
@@ -70,6 +71,12 @@ namespace DoorsOS.RealMachines
 
         private void ExecuteRun(string nameToFind)
         {
+            var segments = ReadCommandsAndSetBytes(nameToFind);
+            StartVirtualMachine(segments.DataSegment, segments.CodeSegment);
+        }
+
+        private VirtualMachineSegments ReadCommandsAndSetBytes(string nameToFind)
+        {
             bool foundAmj = false;
             bool nameFound = false;
 
@@ -78,60 +85,55 @@ namespace DoorsOS.RealMachines
             int dataSegment = 0;
             int codeSegment = 0;
 
-            using (var reader = new StreamReader(_hardDisk.Path))
-            {
-                while (reader.Peek() >= 0)
-                {
-                    string line = reader.ReadLine();
+            using var reader = new StreamReader(_hardDisk.Path);
+            bool breakLoop = false;
 
-                    if (line.StartsWith("$$$$"))
-                    {
+            while (reader.Peek() >= 0 && !breakLoop)
+            {
+                string line = reader.ReadLine();
+
+                switch (line)
+                {
+                    case ChannelingConstants.Start:
                         foundAmj = false;
                         nameFound = false;
-                    }
-                    else if (line == nameToFind)
-                    {
+                        break;
+                    case var s when s == nameToFind:
                         nameFound = true;
-                    }
-                    else if (line == "$AMJ" && nameFound)
-                    {
+                        break;
+                    case ChannelingConstants.Amj when nameFound:
                         foundAmj = true;
-                    }
-                    else if (foundAmj && line != "$END")
-                    {
-                        line = string.Join("", line.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
-                        if (line == "CODE")
+                        break;
+                    case var s when line.Replace(" ", "") == ChannelingConstants.Code && foundAmj && line != ChannelingConstants.End:
+                        codeSegment = supervizorCurrentByte;
+                        break;
+                    case var s when line.Replace(" ", "") == ChannelingConstants.Data && foundAmj && line != ChannelingConstants.End:
+                        dataSegment = supervizorCurrentByte;
+                        break;
+                    case ChannelingConstants.End when foundAmj:
+                        breakLoop = true;
+                        break;
+                    default:
+                        if (!foundAmj)
                         {
-                            codeSegment = supervizorCurrentByte;
-                        }
-                        else if (line == "DATA")
-                        {
-                            dataSegment = supervizorCurrentByte;
+                            nameFound = false;
                         }
                         else
                         {
+                            line = line.Replace(" ", "");
                             _ram.SetSupervizorMemoryBytes(supervizorMemoryCurrentBlock, supervizorCurrentByte, line);
                             supervizorCurrentByte += line.Length;
-                            if(supervizorCurrentByte >= OsConstants.BlockSize)
+                            if (supervizorCurrentByte >= OsConstants.BlockSize)
                             {
-                                int numberOfBlocks = supervizorCurrentByte / OsConstants.BlockSize;
-                                supervizorMemoryCurrentBlock += numberOfBlocks;
-                                supervizorCurrentByte -= numberOfBlocks * OsConstants.BlockSize;
+                                supervizorMemoryCurrentBlock += supervizorCurrentByte / OsConstants.BlockSize;
+                                supervizorCurrentByte %= OsConstants.BlockSize;
                             }
                         }
-
-                    }
-                    else if (foundAmj && line == "$END")
-                    {
                         break;
-                    }
-                    else
-                    {
-                        nameFound = false;
-                    }
                 }
             }
-            StartVirtualMachine(dataSegment, codeSegment);
+
+            return new VirtualMachineSegments() { DataSegment = dataSegment, CodeSegment = codeSegment };
         }
 
         private void StartVirtualMachine(int dataSegment, int codeSegment)
