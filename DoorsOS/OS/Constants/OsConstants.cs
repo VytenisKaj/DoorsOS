@@ -2,7 +2,7 @@
 {
     public static class OsConstants
     {
-        public static readonly string HardDisk = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName, "Devices/HardDisks/hdd.txt");
+        public static readonly string HardDisk = "../../../Devices/HardDisks/hdd.txt";
         public const int MinimalVirtualMachineCount = 4;
         public const int WordLenghtInBytes = 4;
         public const int VirtualMachineBlocksCount = 16;

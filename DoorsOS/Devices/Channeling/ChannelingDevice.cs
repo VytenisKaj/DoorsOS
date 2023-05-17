@@ -8,6 +8,7 @@ namespace DoorsOS.Devices.Channeling
     {
         private readonly IHardDisk _hardDisk;
         private readonly IRam _ram;
+        // + puslapiavimo mechanizmas
 
         // Registers
         // nustatomi is realios masinos ir isvedami i ekrana?
@@ -36,6 +37,16 @@ namespace DoorsOS.Devices.Channeling
         {
             _hardDisk = new HardDisk();
             _ram = ram;
+        }
+
+        public void Exchange(char[] st, char[] dt)
+        {
+            // konvertuojam abu i intus
+
+            // st switch
+
+            // dt switch
+
         }
 
         public (string command, string[] commandAndParameters) ReadAndFormatInput()
