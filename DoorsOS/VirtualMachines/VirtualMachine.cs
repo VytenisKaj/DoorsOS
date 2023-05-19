@@ -401,5 +401,12 @@ namespace DoorsOS.VirtualMachines
         {
             _processorState = new ProcessorState(_processor);
         }
+
+        public void Resume()
+        {
+            IsActive = true;
+            IsStopped = false;
+            _processorState.Load(_processor);
+        }
     }
 }
