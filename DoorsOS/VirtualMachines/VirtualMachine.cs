@@ -11,6 +11,7 @@ namespace DoorsOS.VirtualMachines
         public bool IsStopped { get; set; } = false;
         private readonly IProcessor _processor;
         private readonly IMemoryManagementUnit _memoryManagementUnit;
+
         private readonly int dataSegmentStart;
         private readonly int codeSegmentStart;
         private ProcessorState _processorState;
