@@ -2,11 +2,14 @@
 {
     public interface IChannelingDevice
     {
-        char[] SB { get; set; }
-        char[] DB { get; set; }
+        char[] SB_block { get; set; }
+        char[] SB_index { get; set; }
+        char[] DB_block { get; set; }
+        char[] DB_index { get; set; }
         char[] ST { get; set; }
         char[] DT { get; set; }
-        int XCHG { get; set; }
-        void Exchange();
+        int CNT { get; set; }
+
+        void Exchange(string nameToFind);
     }
 }

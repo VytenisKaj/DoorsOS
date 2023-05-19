@@ -1,6 +1,4 @@
-﻿using DoorsOS.OS.Constants;
-
-namespace DoorsOS.RealMachines.Processors
+﻿namespace DoorsOS.RealMachines.Processors
 {
     public interface IProcessor
     {
