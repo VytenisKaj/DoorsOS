@@ -8,8 +8,10 @@ namespace DoorsOS.VirtualMachines
     {
         public bool IsActive { get; set; } = true;
         public bool IsFinished { get; set; } = false;
+
         private readonly IProcessor _processor;
         private readonly IMemoryManagementUnit _memoryManagementUnit;
+
         private readonly int dataSegmentStart;
         private readonly int codeSegmentStart;
         public VirtualMachine(IProcessor processor, IMemoryManagementUnit memoryManagementUnit)
