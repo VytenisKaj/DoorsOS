@@ -7,7 +7,6 @@ using DoorsOS.RealMachines.Handlers;
 using DoorsOS.RealMachines.Memories;
 using DoorsOS.RealMachines.Processors;
 using DoorsOS.VirtualMachines;
-using System.Text;
 
 namespace DoorsOS.RealMachines
 {
