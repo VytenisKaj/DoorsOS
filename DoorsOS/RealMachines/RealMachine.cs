@@ -1,7 +1,9 @@
 ﻿using DoorsOS.Devices.HardDisks;
 using DoorsOS.Devices.MemoryManagementUnits;
+using DoorsOS.Devices.ProcessManagers;
 using DoorsOS.OS.Constants;
 using DoorsOS.Paginators;
+using DoorsOS.RealMachines.Handlers;
 using DoorsOS.RealMachines.Memories;
 using DoorsOS.RealMachines.Processors;
 using DoorsOS.VirtualMachines;
@@ -16,16 +18,18 @@ namespace DoorsOS.RealMachines
         private readonly IHardDisk _hardDisk;
         private readonly IPaginator _paginator;
         private readonly IMemoryManagementUnit _memoryManagementUnit;
-        private readonly List<IVirtualMachine> _virtualMachines = new();
+        private readonly IInterruptHandler _interruptHandler;
+        private readonly IProcessManager _processManager;
 
         public RealMachine()
         {
             _processor = new Processor();
             _ram = new Ram();
             _hardDisk = new HardDisk();
+            _processManager = new ProcessManager();
             _paginator = new Paginator(_ram, _processor);
             _memoryManagementUnit = new MemoryManagementUnit(_processor, _ram);
-
+            _interruptHandler = new InterruptHandler(_processor, _processManager);
             /*_ram.IsBlockUsed[1] = true;
             _ram.IsBlockUsed[6] = true; // For testing paginator, simulating used pages
             _ram.IsBlockUsed[9] = true;
@@ -50,10 +54,18 @@ namespace DoorsOS.RealMachines
                         if (commandAndParameters?.Length > 1)
                         {
                             ExecuteRun(commandAndParameters[1].Trim());
-                            while (!_virtualMachines[0].IsFinished)
+                            var activeProcess = _processManager.ActiveProcess();
+                            while (!activeProcess.IsFinished)
                             {
-                                _virtualMachines[0].ExecuteInstruction();
-                                Console.WriteLine(_processor.Ti);
+                                if (_interruptHandler.HasInterrupted())
+                                {
+                                    _interruptHandler.HandleInterrupt();
+                                }
+                                else
+                                {
+                                    activeProcess.ExecuteInstruction();
+                                    Console.WriteLine(_processor.Ti);
+                                }
                             }
                         }
                         else
@@ -131,6 +143,7 @@ namespace DoorsOS.RealMachines
                     }
                 }
             }
+
             StartVirtualMachine(dataSegment, codeSegment);
         }
 
@@ -140,7 +153,7 @@ namespace DoorsOS.RealMachines
             MoveFromSupervizorMemoryToDedicatedPages();
             _processor.Cs = _processor.FromIntToHexNumberTwoBytes(codeSegment);
             _processor.Ds = _processor.FromIntToHexNumberTwoBytes(dataSegment);
-            _virtualMachines.Add(new VirtualMachine(_processor, _memoryManagementUnit));
+            _processManager.Processes.Add(new VirtualMachine(_processor, _memoryManagementUnit));
         }
 
         private void MoveFromSupervizorMemoryToDedicatedPages()

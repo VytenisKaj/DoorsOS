@@ -2,9 +2,12 @@
 {
     public interface IVirtualMachine
     {
-        public bool IsActive { get; set; }
-        public bool IsFinished { get; set; }
+        bool IsActive { get; set; }
+        bool IsFinished { get; set; }
+        bool IsStopped { get; set; }
         void ExecuteInstruction();
+        (string instruction, int block, int index) GetInstruction();
+        void SaveState();
 
     }
 }
