@@ -1,4 +1,5 @@
-﻿using DoorsOS.Devices.MemoryManagementUnits;
+﻿using DoorsOS.Devices.Channeling;
+using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
 using DoorsOS.RealMachines.Processors;
 
@@ -11,15 +12,17 @@ namespace DoorsOS.VirtualMachines
         public bool IsStopped { get; set; } = false;
         private readonly IProcessor _processor;
         private readonly IMemoryManagementUnit _memoryManagementUnit;
+        private readonly IChannelingDevice _channelingDevice;
 
         private readonly int dataSegmentStart;
         private readonly int codeSegmentStart;
         private ProcessorState _processorState;
 
-        public VirtualMachine(IProcessor processor, IMemoryManagementUnit memoryManagementUnit)
+        public VirtualMachine(IProcessor processor, IMemoryManagementUnit memoryManagementUnit, IChannelingDevice channelingDevice)
         {
             _processor = processor;
             _processor.Ic = _processor.FromIntToHexNumberTwoBytes(0);
+            _channelingDevice = channelingDevice;
             _processor.Pi = InterruptConstants.PiReset;
             _processor.Si = InterruptConstants.SiReset;
             _processor.Ti = InterruptConstants.TiReset;
@@ -31,7 +34,12 @@ namespace DoorsOS.VirtualMachines
 
         public void ExecuteInstruction()
         {
-            (string instruction, int block, int index) = GetInstruction();
+            int icValue = _processor.FromHexAsCharArrayToInt(_processor.Ic);
+            int instructionIndex = codeSegmentStart + icValue;
+            int block = instructionIndex / OsConstants.BlockSize;
+            int index = instructionIndex % OsConstants.BlockSize;
+            var instruction = _memoryManagementUnit.ReadVirtualMachineMemoryWord(block, index).ToUpper();
+            //(string instruction, int block, int index) = GetInstruction();
             switch (instruction)
             {
                 case Instructions.Comp:
@@ -320,12 +328,12 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecutePtinInstruction()
         {
-            // Set Sb to R1 value
-            // Set St to 1
-            // Set Db to 0? (output stream doesn't have pages?)
-            // Set Dt to 3
-            _processor.R2 = _processor.FromIntToHexNumber(OsConstants.WordLenghtInBytes);
-            // Call Xchg
+            _channelingDevice.ST = ChannelingDeviceConstants.FromUserMemory.ToArray();
+            _channelingDevice.DT = ChannelingDeviceConstants.ToConsole.ToArray();
+            _processor.Si = InterruptConstants.SiPtin;
+            var realBlock = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
+            _channelingDevice.SB_block = realBlock;
+            _channelingDevice.SB_index = new char[] { '0', '0', '0', _processor.R1[3] };
             DoTiAndIcDefaultBehaviour();
         }
 
@@ -342,12 +350,12 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecutePtchInstruction()
         {
-            // Set Sb to R1 value
-            // Set St to 1
-            // Set Db to 0? (output stream doesn't have pages?)
-            // Set Dt to 3
-            // R1 and R2 should be set by program
-            // Call Xchg
+            _channelingDevice.ST = ChannelingDeviceConstants.FromUserMemory.ToArray();
+            _channelingDevice.DT = ChannelingDeviceConstants.ToConsole.ToArray();
+            _processor.Si = InterruptConstants.SiPtch;
+            var realBlock = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
+            _channelingDevice.SB_block = realBlock;
+            _channelingDevice.SB_index = new char[] {'0', '0', '0', _processor.R1[3] };
             DoTiAndIcDefaultBehaviour();
         }
 

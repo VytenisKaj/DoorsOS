@@ -1,4 +1,5 @@
-﻿using DoorsOS.Devices.ProcessManagers;
+﻿using DoorsOS.Devices.Channeling;
+using DoorsOS.Devices.ProcessManagers;
 using DoorsOS.OS.Constants;
 using DoorsOS.RealMachines.Processors;
 
@@ -8,11 +9,13 @@ namespace DoorsOS.RealMachines.Handlers
     {
         private readonly IProcessor _processor;
         private readonly IProcessManager _processManager;
+        private readonly IChannelingDevice _chanellingDevice;
 
-        public InterruptHandler(IProcessor processor, IProcessManager processManager)
+        public InterruptHandler(IProcessor processor, IProcessManager processManager, IChannelingDevice channelingDevice)
         {
             _processor = processor;
             _processManager = processManager;
+            _chanellingDevice = channelingDevice;
         }
         public void HandleInterrupt()
         {
@@ -37,19 +40,53 @@ namespace DoorsOS.RealMachines.Handlers
             switch (_processor.Si)
             {
                 case InterruptConstants.SiRdin:
+                    HandleRdinInterrupt();
                     break;
                 case InterruptConstants.SiPtin:
+                    HandlePtinInterrupt();
                     break;
                 case InterruptConstants.SiRdch:
+                    HandleRdchInterrupt();
                     break;
                 case InterruptConstants.SiPtch:
+                    HandlePtchInterrupt();
                     break;
                 case InterruptConstants.SiHalt:
                     HandleHaltInterrupt();
                     break;
                 case InterruptConstants.SiExec:
+                    HandleExecInterrupt();
                     break;
             }
+        }
+
+        private void HandleExecInterrupt()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void HandlePtchInterrupt()
+        {
+            _chanellingDevice.CNT = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            _chanellingDevice.Exchange("");
+            _processor.Si = InterruptConstants.SiReset;
+        }
+
+        private void HandleRdchInterrupt()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void HandlePtinInterrupt()
+        {
+            _chanellingDevice.CNT = 4;
+            _chanellingDevice.Exchange("");
+            _processor.Si = InterruptConstants.SiReset;
+        }
+
+        private void HandleRdinInterrupt()
+        {
+            throw new NotImplementedException();
         }
 
         private void HandleHaltInterrupt()
@@ -62,15 +99,33 @@ namespace DoorsOS.RealMachines.Handlers
             switch (_processor.Pi)
             {
                 case InterruptConstants.PiBadAdress:
+                    HandleBadAdressInterrupt();
                     break;
                 case InterruptConstants.PiBadOpCode:
                     HandleBadOpInterrupt();
                     break;
                 case InterruptConstants.PiBadAssignment:
+                    HandleBadAssignmentInterrupt();
                     break;
                 case InterruptConstants.PiOverflow:
+                    HandleOverflowInterrupt();
                     break;
             }
+        }
+
+        private void HandleOverflowInterrupt()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void HandleBadAssignmentInterrupt()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void HandleBadAdressInterrupt()
+        {
+            throw new NotImplementedException();
         }
 
         private void HandleBadOpInterrupt()

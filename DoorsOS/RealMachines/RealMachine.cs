@@ -32,7 +32,7 @@ namespace DoorsOS.RealMachines
             _memoryManagementUnit = new MemoryManagementUnit(_processor, _ram);
             _channelingDevice = new ChannelingDevice(_ram, _processor);
 
-            _interruptHandler = new InterruptHandler(_processor, _processManager);
+            _interruptHandler = new InterruptHandler(_processor, _processManager, _channelingDevice);
             /*_ram.IsBlockUsed[1] = true;
             _ram.IsBlockUsed[6] = true; // For testing paginator, simulating used pages
             _ram.IsBlockUsed[9] = true;
@@ -67,7 +67,7 @@ namespace DoorsOS.RealMachines
                                 else
                                 {
                                     activeProcess.ExecuteInstruction();
-                                    Console.WriteLine(_processor.Ti);
+                                    //Console.WriteLine(_processor.Ti);
                                 }
                             }
                         }
@@ -96,9 +96,8 @@ namespace DoorsOS.RealMachines
         {
             _paginator.GetPages();
             MoveFromSupervizorMemoryToDedicatedPages();
-            _processor.Cs = _processor.FromIntToHexNumberTwoBytes(codeSegment);
-            _processor.Ds = _processor.FromIntToHexNumberTwoBytes(dataSegment);
-            _processManager.Processes.Add(new VirtualMachine(_processor, _memoryManagementUnit));
+            
+            _processManager.Processes.Add(new VirtualMachine(_processor, _memoryManagementUnit, _channelingDevice));
         }
 
         private void MoveFromSupervizorMemoryToDedicatedPages()

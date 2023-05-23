@@ -16,5 +16,6 @@ namespace DoorsOS.Devices.MemoryManagementUnits
         void WriteVirtualMachineMemoryBytes(int block, int index, string bytes);
 
         void WriteVirtualMachineMemoryWord(int block, int index, string word);
+        char[] RealMemoryBlock(char virtualMachineMemoryBlock);
     }
 }
