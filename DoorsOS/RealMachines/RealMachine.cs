@@ -60,14 +60,21 @@ namespace DoorsOS.RealMachines
                             var activeProcess = _processManager.ActiveProcess();
                             while (!activeProcess.IsFinished)
                             {
-                                if (_interruptHandler.HasInterrupted())
+                                try
                                 {
-                                    _interruptHandler.HandleInterrupt();
+                                    if (_interruptHandler.HasInterrupted())
+                                    {
+                                        _interruptHandler.HandleInterrupt();
+                                    }
+                                    else
+                                    {
+                                        activeProcess.ExecuteInstruction();
+                                        //Console.WriteLine(_processor.Ti);
+                                    }
                                 }
-                                else
+                                catch
                                 {
-                                    activeProcess.ExecuteInstruction();
-                                    //Console.WriteLine(_processor.Ti);
+                                    // interrup handler will deal with it
                                 }
                             }
                         }

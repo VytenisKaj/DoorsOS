@@ -33,7 +33,13 @@ namespace DoorsOS.RealMachines.Processors
 
         public int FromHexAsCharArrayToInt(char[] hex)
         {
-            return Int32.Parse(hex, System.Globalization.NumberStyles.HexNumber);
+            if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out int result))
+            {
+                return result;
+            }
+
+            Pi = InterruptConstants.PiBadAssignment;
+            throw new FormatException("Invalid hex used.");
         }
 
         public void SetOverflowFlag(bool toFalse = false)
