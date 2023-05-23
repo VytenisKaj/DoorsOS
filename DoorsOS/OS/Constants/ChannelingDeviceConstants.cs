@@ -10,5 +10,11 @@
         public const string ToUserMemory = "0001";
         public const string ToSupervizoryMemory = "0002";
         public const string ToConsole = "0003";
+
+        public const string Start = "$$$$";
+        public const string Amj = "$AMJ";
+        public const string End = "$END";
+        public const string Code = "CODE";
+        public const string Data = "DATA";
     }
 }

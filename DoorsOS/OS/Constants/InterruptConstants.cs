@@ -12,8 +12,8 @@
 
         public const char PiBadAdress = '1';
         public const char PiBadOpCode = '2';
-        public const char PiBadAssignment = '3';
-        public const char PiOverflow = '4';
+        public const char PiOverflow = '3';
+        public const char PiBadAssignment = '4'; // do we get this one?
         public const char PiReset = '0';
 
         public const char TiReset = 'F';

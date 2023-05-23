@@ -14,6 +14,15 @@ namespace DoorsOS.Devices.MemoryManagementUnits
             _processor = processor;
             _ram = ram;
         }
+
+        public char[] RealMemoryBlock(char virtualMachineMemoryBlock)
+        {
+            var ptrValue = _processor.FromHexAsCharArrayToInt(_processor.Ptr);
+            var virtualMachineBlockValue = _processor.FromHexAsCharArrayToInt(new char[] { virtualMachineMemoryBlock });
+            var realBlock = _ram.GetMemoryAsInt(ptrValue, virtualMachineBlockValue * OsConstants.WordLenghtInBytes);
+            return _processor.FromIntToHexNumber(realBlock);
+        }
+
         public char ReadVirtualMachineMemoryByte(int block, int index)
         {
             var ptrValue = _processor.FromHexAsCharArrayToInt(_processor.Ptr);

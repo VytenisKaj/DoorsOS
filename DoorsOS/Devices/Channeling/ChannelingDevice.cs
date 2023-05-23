@@ -75,7 +75,7 @@ namespace DoorsOS.Devices.Channeling
                     input = Console.ReadLine();
                     break;
                 default:
-                    throw new Exception("Unknown ST register value.");
+                    throw new Exception("Unknown ST register value."); // interrupt
             }
 
             if (input == null)
@@ -102,7 +102,7 @@ namespace DoorsOS.Devices.Channeling
                     Console.WriteLine(input);
                     break;
                 default:
-                    throw new Exception("Unknown DT register value.");
+                    throw new Exception("Unknown DT register value."); // interrupt
             }
         }
 
@@ -130,23 +130,23 @@ namespace DoorsOS.Devices.Channeling
 
                 switch (line)
                 {
-                    case ChannelingConstants.Start:
+                    case ChannelingDeviceConstants.Start:
                         foundAmj = false;
                         nameFound = false;
                         break;
                     case var s when s == nameToFind:
                         nameFound = true;
                         break;
-                    case ChannelingConstants.Amj when nameFound:
+                    case ChannelingDeviceConstants.Amj when nameFound:
                         foundAmj = true;
                         break;
-                    case var s when line.Replace(" ", "") == ChannelingConstants.Code && foundAmj && line != ChannelingConstants.End:
+                    case var s when line.Replace(" ", "") == ChannelingDeviceConstants.Code && foundAmj && line != ChannelingDeviceConstants.End:
                         codeSegment = supervizorCurrentByte;
                         break;
-                    case var s when line.Replace(" ", "") == ChannelingConstants.Data && foundAmj && line != ChannelingConstants.End:
+                    case var s when line.Replace(" ", "") == ChannelingDeviceConstants.Data && foundAmj && line != ChannelingDeviceConstants.End:
                         dataSegment = supervizorCurrentByte;
                         break;
-                    case ChannelingConstants.End when foundAmj:
+                    case ChannelingDeviceConstants.End when foundAmj:
                         breakLoop = true;
                         break;
                     default:
@@ -159,8 +159,6 @@ namespace DoorsOS.Devices.Channeling
                             line = line.Replace(" ", "");
                             _ram.SetSupervizorMemoryBytes(supervizorMemoryCurrentBlock, supervizorCurrentByte, line);
                             supervizorCurrentByte += line.Length;
-                            _ram.SetSupervizorMemoryBytes(supervizorMemoryCurrentBlock, supervizorCurrentByte, line);
-                            supervizorCurrentByte += line.Length;
                             if (supervizorCurrentByte >= OsConstants.BlockSize)
                             {
                                 int numberOfBlocks = supervizorCurrentByte / OsConstants.BlockSize;
@@ -171,6 +169,68 @@ namespace DoorsOS.Devices.Channeling
                         break;
                 }
             }
+
+            /*bool foundAmj = false;
+            bool nameFound = false;
+
+            int supervizorMemoryCurrentBlock = 0;
+            int supervizorCurrentByte = 0;
+            int dataSegment = 0;
+            int codeSegment = 0;
+
+            using (var reader = new StreamReader(_hardDisk.Path))
+            {
+                while (reader.Peek() >= 0)
+                {
+                    string line = reader.ReadLine();
+
+                    if (line == ChannelingDeviceConstants.Start)
+                    {
+                        foundAmj = false;
+                        nameFound = false;
+                    }
+                    else if (line == nameToFind)
+                    {
+                        nameFound = true;
+                    }
+                    else if (line == ChannelingDeviceConstants.Amj && nameFound)
+                    {
+                        foundAmj = true;
+                    }
+                    else if (foundAmj && line != "$END")
+                    {
+                        line = string.Join("", line.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
+                        if (line == ChannelingDeviceConstants.Code)
+                        {
+                            codeSegment = supervizorCurrentByte;
+                        }
+                        else if (line == ChannelingDeviceConstants.Data)
+                        {
+                            dataSegment = supervizorCurrentByte;
+                        }
+                        else
+                        {
+                            _ram.SetSupervizorMemoryBytes(supervizorMemoryCurrentBlock, supervizorCurrentByte, line);
+                            supervizorCurrentByte += line.Length;
+                            if (supervizorCurrentByte >= OsConstants.BlockSize)
+                            {
+                                int numberOfBlocks = supervizorCurrentByte / OsConstants.BlockSize;
+                                supervizorMemoryCurrentBlock += numberOfBlocks;
+                                supervizorCurrentByte = numberOfBlocks * OsConstants.BlockSize;
+                            }
+                        }
+
+                    }
+                    else if (foundAmj && line == ChannelingDeviceConstants.End)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        nameFound = false;
+                    }
+                }
+            }*/
 
             return new VirtualMachineSegments() { DataSegment = dataSegment, CodeSegment = codeSegment };
         }
