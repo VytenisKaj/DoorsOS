@@ -2,6 +2,7 @@
 using DoorsOS.Devices.MemoryManagementUnits;
 using DoorsOS.OS.Constants;
 using DoorsOS.RealMachines.Processors;
+using System.Globalization;
 
 namespace DoorsOS.VirtualMachines
 {
@@ -258,15 +259,21 @@ namespace DoorsOS.VirtualMachines
             }
         }
 
+        private int HexToIntTwosComplement(char[] hex)
+        {
+            int temp = int.Parse(hex, NumberStyles.HexNumber);
+            return (temp > 32767) ? (int)(temp - 65536) : (int)temp;
+        }
+
         private void ExecuteAddiInstruction()
         {
-            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
-            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            var r1Value = HexToIntTwosComplement(_processor.R1);
+            var r2Value = HexToIntTwosComplement(_processor.R2);
 
-            var result = r1Value + r2Value;
-            uint uintResult = (uint)r1Value + (uint)r2Value;
+            short result = (short)(r1Value + r2Value);
+            int intResult = r1Value + r2Value;
 
-            SetFlags(result, uintResult);
+            //SetFlags(result, uintResult);
 
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
@@ -275,13 +282,13 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecuteMultInstruction()
         {
-            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
-            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            var r1Value = HexToIntTwosComplement(_processor.R1);
+            var r2Value = HexToIntTwosComplement(_processor.R2);
 
-            var result = r1Value * r2Value;
-            uint uintResult = (uint)r1Value * (uint)r2Value;
+            short result = (short)(r1Value * r2Value);
+            int intResult = r1Value + r2Value;
 
-            SetFlags(result, uintResult);
+            //SetFlags(result, uintResult);
 
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
@@ -290,13 +297,13 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecuteSubsInstruction()
         {
-            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
-            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            var r1Value = HexToIntTwosComplement(_processor.R1);
+            var r2Value = HexToIntTwosComplement(_processor.R2);
 
-            var result = r1Value - r2Value;
-            uint uintResult = (uint)r1Value - (uint)r2Value;
+            short result = (short)(r1Value - r2Value);
+            int intResult = r1Value + r2Value;
 
-            SetFlags(result, uintResult);
+            //SetFlags(result, uintResult);
 
             _processor.R1 = _processor.FromIntToHexNumber(result);
 
@@ -305,8 +312,8 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecuteDiviInstruction()
         {
-            var r1Value = _processor.FromHexAsCharArrayToInt(_processor.R1);
-            var r2Value = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            var r1Value = HexToIntTwosComplement(_processor.R1);
+            var r2Value = HexToIntTwosComplement(_processor.R2);
 
             var quotient = r1Value / r2Value;
             var remainder = r1Value % r2Value;
@@ -330,21 +337,23 @@ namespace DoorsOS.VirtualMachines
         {
             _channelingDevice.ST = ChannelingDeviceConstants.FromUserMemory.ToArray();
             _channelingDevice.DT = ChannelingDeviceConstants.ToConsole.ToArray();
-            _processor.Si = InterruptConstants.SiPtin;
             var realBlock = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
             _channelingDevice.SB_block = realBlock;
             _channelingDevice.SB_index = new char[] { '0', '0', '0', _processor.R1[3] };
+
+            _processor.Si = InterruptConstants.SiPtin;
             DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteRdinInstruction()
         {
-            // set Sb to 0?
-            // set St to 4
-            // set Db to R1
-            // set Dt to 1
+            _channelingDevice.ST = ChannelingDeviceConstants.FromConsole.ToArray();
+            _channelingDevice.DT = ChannelingDeviceConstants.ToUserMemory.ToArray();
+            _channelingDevice.DB_block = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
+            _channelingDevice.DB_index = new char[] { '0', '0', '0', _processor.R1[3] };
             _processor.R2 = _processor.FromIntToHexNumber(OsConstants.WordLenghtInBytes);
-            // Call Xchg
+
+            _processor.Si = InterruptConstants.SiRdin;
             DoTiAndIcDefaultBehaviour();
         }
 
@@ -352,25 +361,27 @@ namespace DoorsOS.VirtualMachines
         {
             _channelingDevice.ST = ChannelingDeviceConstants.FromUserMemory.ToArray();
             _channelingDevice.DT = ChannelingDeviceConstants.ToConsole.ToArray();
-            _processor.Si = InterruptConstants.SiPtch;
             var realBlock = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
             _channelingDevice.SB_block = realBlock;
             _channelingDevice.SB_index = new char[] {'0', '0', '0', _processor.R1[3] };
+
+            _processor.Si = InterruptConstants.SiPtch;
             DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuuteRdchInstruction()
         {
-            // set Sb to 0?
-            // set St to 4
-            // set Db to R1
-            // set Dt to 1
-            // R1 and R2 should be set by program
-            // Call Xchg
+            
+            _channelingDevice.ST = ChannelingDeviceConstants.FromConsole.ToArray();
+            _channelingDevice.DT = ChannelingDeviceConstants.ToUserMemory.ToArray();
+            _channelingDevice.DB_block = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
+            _channelingDevice.DB_index = new char[] { '0', '0', '0', _processor.R1[3] };
+
+            _processor.Si = InterruptConstants.SiRdch;
             DoTiAndIcDefaultBehaviour();
         }
 
-        private void SetFlags(int result, uint uintResult)
+        private void SetFlags(int result, uint intResult)
         {
             if (result == 0)
             {
@@ -382,7 +393,7 @@ namespace DoorsOS.VirtualMachines
                 _processor.SetOverflowFlag();
             }
 
-            if (uintResult > uint.MaxValue)
+            if (intResult > uint.MaxValue)
             {
                 _processor.SetCarryFlag();
             }

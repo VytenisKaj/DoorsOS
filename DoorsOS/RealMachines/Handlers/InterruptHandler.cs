@@ -74,7 +74,9 @@ namespace DoorsOS.RealMachines.Handlers
 
         private void HandleRdchInterrupt()
         {
-            throw new NotImplementedException();
+            _chanellingDevice.CNT = _processor.FromHexAsCharArrayToInt(_processor.R2);
+            _chanellingDevice.Exchange("");
+            _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandlePtinInterrupt()
@@ -86,7 +88,9 @@ namespace DoorsOS.RealMachines.Handlers
 
         private void HandleRdinInterrupt()
         {
-            throw new NotImplementedException();
+            _chanellingDevice.CNT = 4;
+            _chanellingDevice.Exchange("");
+            _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandleHaltInterrupt()

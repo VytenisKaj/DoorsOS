@@ -18,12 +18,12 @@ namespace DoorsOS.RealMachines.Processors
 
         public char[] FromIntToHexNumber(int value) // test nagative
         {
-            return value.ToString("X4").ToCharArray();
+            return value.ToString("X4")[^4..].ToCharArray();
         }
 
         public char[] FromIntToHexNumberTwoBytes(int value)
         {
-            return value.ToString("X2").ToCharArray();
+            return value.ToString("X2")[^2..].ToCharArray();
         }
 
         public char FromIntToHexNumberByte(int value)
