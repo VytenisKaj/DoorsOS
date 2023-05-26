@@ -2,6 +2,7 @@
 using DoorsOS.OS.Constants;
 using DoorsOS.RealMachines.Memories;
 using DoorsOS.RealMachines.Processors;
+using System.Text;
 
 namespace DoorsOS.Devices.Channeling
 {
@@ -78,6 +79,64 @@ namespace DoorsOS.Devices.Channeling
                     throw new Exception("Unknown ST register value."); // interrupt
             }
 
+            if (input == null || input == "")
+            {
+                return;
+            }
+
+            // DT register
+            switch (dt)
+            {
+                case ChannelingDeviceConstants.ToUserMemory:
+                    {
+                        var dbBlock = FromHexAsCharArrayToInt(DB_block);
+                        var dbIndex = FromHexAsCharArrayToInt(DB_index);
+                        _ram.SetMemoryBytes(dbBlock, dbIndex, input);
+                    }
+                    break;
+                case ChannelingDeviceConstants.ToSupervizoryMemory:
+                    {
+                        _ram.SetSupervizorMemoryBytes(0, 0, input);
+                    }
+                    break;
+                case ChannelingDeviceConstants.ToConsole:
+                    Console.WriteLine(input);
+                    break;
+                default:
+                    throw new Exception("Unknown DT register value."); // interrupt
+            }
+        }
+
+        public void Exchange()
+        {
+            var input = string.Empty;
+            var st = new string(ST);
+            var dt = new string(DT);
+
+            // ST register
+            switch (st)
+            {
+                case ChannelingDeviceConstants.FromUserMemory:
+                    {
+                        var sbBlock = FromHexAsCharArrayToInt(SB_block);
+                        var sbIndex = FromHexAsCharArrayToInt(SB_index);
+                        input = _ram.GetMemoryBytes(sbBlock, sbIndex, CNT);
+                    }
+                    break;
+                case ChannelingDeviceConstants.FromSupervizoryMemory:
+                    {
+                        var sbBlock = FromHexAsCharArrayToInt(SB_block);
+                        var sbIndex = FromHexAsCharArrayToInt(SB_index);
+                        input = _ram.GetSupervizorMemoryBytes(sbBlock, sbIndex, CNT);
+                    }
+                    break;
+                case ChannelingDeviceConstants.FromConsole:
+                    input = Console.ReadLine();
+                    break;
+                default:
+                    throw new Exception("Unknown ST register value."); // interrupt
+            }
+
             if (input == null)
             {
                 return;
@@ -113,6 +172,7 @@ namespace DoorsOS.Devices.Channeling
 
         private VirtualMachineSegments ReadFromHardDrive(string nameToFind)
         {
+
             bool foundAmj = false;
             bool nameFound = false;
 
@@ -120,9 +180,19 @@ namespace DoorsOS.Devices.Channeling
             int supervizorCurrentByte = 0;
             int dataSegment = 0;
             int codeSegment = 0;
-
             using var reader = new StreamReader(_hardDisk.Path);
             bool breakLoop = false;
+
+            if (CNT > 0)
+            {
+                var sb = new StringBuilder();
+                for (int i = 0; i < CNT; i++)
+                {
+                    sb.Append(_ram.GetMemoryByte(FromHexAsCharArrayToInt(SB_block), FromHexAsCharArrayToInt(SB_index) + i));
+                }
+                _ram.SetSupervizorMemoryBytes(0, 0, sb.ToString());
+                supervizorCurrentByte = CNT + 1;
+            }
 
             while (reader.Peek() >= 0 && !breakLoop)
             {
@@ -169,68 +239,6 @@ namespace DoorsOS.Devices.Channeling
                         break;
                 }
             }
-
-            /*bool foundAmj = false;
-            bool nameFound = false;
-
-            int supervizorMemoryCurrentBlock = 0;
-            int supervizorCurrentByte = 0;
-            int dataSegment = 0;
-            int codeSegment = 0;
-
-            using (var reader = new StreamReader(_hardDisk.Path))
-            {
-                while (reader.Peek() >= 0)
-                {
-                    string line = reader.ReadLine();
-
-                    if (line == ChannelingDeviceConstants.Start)
-                    {
-                        foundAmj = false;
-                        nameFound = false;
-                    }
-                    else if (line == nameToFind)
-                    {
-                        nameFound = true;
-                    }
-                    else if (line == ChannelingDeviceConstants.Amj && nameFound)
-                    {
-                        foundAmj = true;
-                    }
-                    else if (foundAmj && line != "$END")
-                    {
-                        line = string.Join("", line.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
-                        if (line == ChannelingDeviceConstants.Code)
-                        {
-                            codeSegment = supervizorCurrentByte;
-                        }
-                        else if (line == ChannelingDeviceConstants.Data)
-                        {
-                            dataSegment = supervizorCurrentByte;
-                        }
-                        else
-                        {
-                            _ram.SetSupervizorMemoryBytes(supervizorMemoryCurrentBlock, supervizorCurrentByte, line);
-                            supervizorCurrentByte += line.Length;
-                            if (supervizorCurrentByte >= OsConstants.BlockSize)
-                            {
-                                int numberOfBlocks = supervizorCurrentByte / OsConstants.BlockSize;
-                                supervizorMemoryCurrentBlock += numberOfBlocks;
-                                supervizorCurrentByte = numberOfBlocks * OsConstants.BlockSize;
-                            }
-                        }
-
-                    }
-                    else if (foundAmj && line == ChannelingDeviceConstants.End)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        nameFound = false;
-                    }
-                }
-            }*/
 
             return new VirtualMachineSegments() { DataSegment = dataSegment, CodeSegment = codeSegment };
         }

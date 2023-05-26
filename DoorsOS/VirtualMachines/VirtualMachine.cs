@@ -8,7 +8,8 @@ namespace DoorsOS.VirtualMachines
 {
     public class VirtualMachine : IVirtualMachine
     {
-        public bool IsActive { get; set; } = true;
+        static int processes_count = 0;
+        public bool IsActive { get; set; } = false;
         public bool IsFinished { get; set; } = false;
         public bool IsStopped { get; set; } = false;
         private readonly IProcessor _processor;
@@ -18,6 +19,7 @@ namespace DoorsOS.VirtualMachines
         private readonly int dataSegmentStart;
         private readonly int codeSegmentStart;
         private ProcessorState _processorState;
+        private int id = -1;
 
         public VirtualMachine(IProcessor processor, IMemoryManagementUnit memoryManagementUnit, IChannelingDevice channelingDevice)
         {
@@ -31,6 +33,7 @@ namespace DoorsOS.VirtualMachines
             dataSegmentStart = _processor.FromHexAsCharArrayToInt(_processor.Ds);
             codeSegmentStart = _processor.FromHexAsCharArrayToInt(_processor.Cs);
             _processorState = new ProcessorState(processor);
+            id = processes_count++;
         }
 
         public void ExecuteInstruction()
@@ -123,15 +126,18 @@ namespace DoorsOS.VirtualMachines
 
         private void ExecuteExecInstruction()
         {
+            _channelingDevice.ST = ChannelingDeviceConstants.FromHardDisk.ToArray();
+            _channelingDevice.DT = ChannelingDeviceConstants.ToSupervizoryMemory.ToArray();
+            var realBlock = _memoryManagementUnit.RealMemoryBlock(_processor.R1[2]);
+            _channelingDevice.SB_block = realBlock;
+            _channelingDevice.SB_index = new char[] { '0', '0', '0', _processor.R1[3] };
+            _channelingDevice.CNT = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R1[0], _processor.R1[1] });
             _processor.Si = InterruptConstants.SiExec;
             DoTiAndIcDefaultBehaviour();
         }
 
         private void ExecuteHaltInstruction()
         {
-            IsFinished = true;
-            IsActive = false;
-            IsStopped = false;
             _processor.Si = InterruptConstants.SiHalt;
         }
 
@@ -381,14 +387,14 @@ namespace DoorsOS.VirtualMachines
             DoTiAndIcDefaultBehaviour();
         }
 
-        private void SetFlags(int result, uint intResult)
+        private void SetFlags(int result, int intResult)
         {
             if (result == 0)
             {
                 _processor.SetZeroFlag();
             }
 
-            if (result > Int32.MaxValue || result < Int32.MinValue)
+            if (intResult > Int16.MaxValue || intResult < Int16.MinValue)
             {
                 _processor.SetOverflowFlag();
             }

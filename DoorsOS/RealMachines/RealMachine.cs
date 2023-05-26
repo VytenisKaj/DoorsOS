@@ -57,16 +57,20 @@ namespace DoorsOS.RealMachines
                         if (commandAndParameters?.Length > 1)
                         {
                             ExecuteRun(commandAndParameters[1].Trim());
-                            var activeProcess = _processManager.ActiveProcess();
-                            while (!activeProcess.IsFinished)
+                            while (!_processManager.ActiveProcess.IsFinished)
                             {
                                 if (_interruptHandler.HasInterrupted())
                                 {
                                     _interruptHandler.HandleInterrupt();
+                                    if (_processor.Si == InterruptConstants.SiExec)
+                                    {
+                                        StartVirtualMachine();
+                                        _processor.Si = InterruptConstants.SiReset;
+                                    }
                                 }
                                 else
                                 {
-                                    activeProcess.ExecuteInstruction();
+                                    _processManager.ActiveProcess.ExecuteInstruction();
                                     //Console.WriteLine(_processor.Ti);
                                 }
                             }
@@ -87,9 +91,11 @@ namespace DoorsOS.RealMachines
         {
             _channelingDevice.ST = ChannelingDeviceConstants.FromHardDisk.ToCharArray();
             _channelingDevice.DT = ChannelingDeviceConstants.ToSupervizoryMemory.ToCharArray();
+            _channelingDevice.CNT = 0;
 
             _channelingDevice.Exchange(nameToFind);
             StartVirtualMachine();
+            _processManager.StartReadyProcess();
         }
 
         private void StartVirtualMachine()
@@ -97,7 +103,7 @@ namespace DoorsOS.RealMachines
             _paginator.GetPages();
             MoveFromSupervizorMemoryToDedicatedPages();
             
-            _processManager.Processes.Add(new VirtualMachine(_processor, _memoryManagementUnit, _channelingDevice));
+            _processManager.ReadyProcesses.Add(new VirtualMachine(_processor, _memoryManagementUnit, _channelingDevice));
         }
 
         private void MoveFromSupervizorMemoryToDedicatedPages()

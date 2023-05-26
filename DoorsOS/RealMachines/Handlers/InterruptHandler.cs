@@ -62,40 +62,43 @@ namespace DoorsOS.RealMachines.Handlers
 
         private void HandleExecInterrupt()
         {
-            throw new NotImplementedException();
+            _chanellingDevice.Exchange(new string(_processor.R2));
         }
 
         private void HandlePtchInterrupt()
         {
             _chanellingDevice.CNT = _processor.FromHexAsCharArrayToInt(_processor.R2);
-            _chanellingDevice.Exchange("");
+            _chanellingDevice.Exchange();
             _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandleRdchInterrupt()
         {
             _chanellingDevice.CNT = _processor.FromHexAsCharArrayToInt(_processor.R2);
-            _chanellingDevice.Exchange("");
+            _chanellingDevice.Exchange();
             _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandlePtinInterrupt()
         {
             _chanellingDevice.CNT = 4;
-            _chanellingDevice.Exchange("");
+            _chanellingDevice.Exchange();
             _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandleRdinInterrupt()
         {
             _chanellingDevice.CNT = 4;
-            _chanellingDevice.Exchange("");
+            _chanellingDevice.Exchange();
             _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandleHaltInterrupt()
         {
             _processManager.StopActiveProcess();
+            _processManager.ReadyProcesses.RemoveAll(p => p.IsFinished);
+            _processManager.StartReadyProcess();
+            _processor.Si = InterruptConstants.SiReset;
         }
 
         private void HandlePiInterrupt()
@@ -111,37 +114,37 @@ namespace DoorsOS.RealMachines.Handlers
                 case InterruptConstants.PiBadAssignment:
                     HandleBadAssignmentInterrupt();
                     break;
-                case InterruptConstants.PiOverflow:
-                    HandleOverflowInterrupt();
-                    break;
             }
-        }
-
-        private void HandleOverflowInterrupt()
-        {
-            throw new NotImplementedException();
         }
 
         private void HandleBadAssignmentInterrupt()
         {
-            throw new NotImplementedException();
+            _processManager.StopActiveProcess();
+            _processManager.ReadyProcesses.RemoveAll(p => p.IsFinished);
+            _processManager.StartReadyProcess();
         }
 
         private void HandleBadAdressInterrupt()
         {
-            throw new NotImplementedException();
+            _processManager.StopActiveProcess();
+            _processManager.ReadyProcesses.RemoveAll(p => p.IsFinished);
+            _processManager.StartReadyProcess();
         }
 
         private void HandleBadOpInterrupt()
         {
-            (string instruction, int block, int index) = _processManager.ActiveProcess().GetInstruction();
+            (string instruction, int block, int index) = _processManager.ActiveProcess.GetInstruction();
             Console.WriteLine($"Bad OP code: {instruction}"); // move to channelling device, in the future include process name, block and index
             _processManager.StopActiveProcess();
+            _processManager.ReadyProcesses.RemoveAll(p => p.IsFinished);
+            _processManager.StartReadyProcess();
         }
 
         private void HandleTiInterrupt()
         {
-            // For future, pick and set new active process, for now, just reset
+            /*_processManager.StopActiveProcess();
+            _processManager.ReadyProcesses.RemoveAll(p => p.IsFinished);
+            _processManager.StartReadyProcess();*/
             _processor.Ti = InterruptConstants.TiReset;
         }
 

@@ -11,5 +11,6 @@
         int CNT { get; set; }
 
         void Exchange(string nameToFind);
+        void Exchange();
     }
 }

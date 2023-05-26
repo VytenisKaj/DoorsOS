@@ -8,6 +8,6 @@
         void ExecuteInstruction();
         (string instruction, int block, int index) GetInstruction();
         void SaveState();
-
+        void Resume();
     }
 }
