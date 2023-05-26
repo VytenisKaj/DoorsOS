@@ -59,19 +59,28 @@ namespace DoorsOS.RealMachines
                             ExecuteRun(commandAndParameters[1].Trim());
                             while (!_processManager.ActiveProcess.IsFinished)
                             {
-                                if (_interruptHandler.HasInterrupted())
+                                try
                                 {
-                                    _interruptHandler.HandleInterrupt();
-                                    if (_processor.Si == InterruptConstants.SiExec)
+                                    if (_interruptHandler.HasInterrupted())
                                     {
-                                        StartVirtualMachine();
-                                        _processor.Si = InterruptConstants.SiReset;
+                                        _interruptHandler.HandleInterrupt();
+                                        if (_processor.Si == InterruptConstants.SiExec)
+                                        {
+                                            StartVirtualMachine();
+                                            _processor.Si = InterruptConstants.SiReset;
+                                            _processManager.ActiveProcess.Resume();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _processManager.ActiveProcess.ExecuteInstruction();
+                                        //Console.WriteLine(_processor.Ti);
                                     }
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    _processManager.ActiveProcess.ExecuteInstruction();
-                                    //Console.WriteLine(_processor.Ti);
+                                    Console.WriteLine(ex.Message);
+                                    _processor.Pi = InterruptConstants.PiBadAssignment;
                                 }
                             }
                         }
@@ -102,8 +111,10 @@ namespace DoorsOS.RealMachines
         {
             _paginator.GetPages();
             MoveFromSupervizorMemoryToDedicatedPages();
-            
-            _processManager.ReadyProcesses.Add(new VirtualMachine(_processor, _memoryManagementUnit, _channelingDevice));
+            var newProcess = new VirtualMachine(_processor, _memoryManagementUnit, _channelingDevice);
+            _processor.Ic = new char[] { '0', '0' };
+            newProcess.SaveState();
+            _processManager.ReadyProcesses.Add(newProcess);
         }
 
         private void MoveFromSupervizorMemoryToDedicatedPages()

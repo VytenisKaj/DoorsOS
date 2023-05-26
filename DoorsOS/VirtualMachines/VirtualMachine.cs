@@ -134,6 +134,8 @@ namespace DoorsOS.VirtualMachines
             _channelingDevice.CNT = _processor.FromHexAsCharArrayToInt(new char[] { _processor.R1[0], _processor.R1[1] });
             _processor.Si = InterruptConstants.SiExec;
             DoTiAndIcDefaultBehaviour();
+            _processorState = new ProcessorState(_processor);
+            
         }
 
         private void ExecuteHaltInstruction()

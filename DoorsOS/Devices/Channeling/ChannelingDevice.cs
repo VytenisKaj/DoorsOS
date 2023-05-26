@@ -76,7 +76,8 @@ namespace DoorsOS.Devices.Channeling
                     input = Console.ReadLine();
                     break;
                 default:
-                    throw new Exception("Unknown ST register value."); // interrupt
+                    _processor.Pi = InterruptConstants.PiBadAssignment;
+                    return;
             }
 
             if (input == null || input == "")
@@ -100,10 +101,11 @@ namespace DoorsOS.Devices.Channeling
                     }
                     break;
                 case ChannelingDeviceConstants.ToConsole:
-                    Console.WriteLine(input);
+                    Console.Write(input);
                     break;
                 default:
-                    throw new Exception("Unknown DT register value."); // interrupt
+                    _processor.Pi = InterruptConstants.PiBadAssignment;
+                    return;
             }
         }
 
@@ -134,7 +136,8 @@ namespace DoorsOS.Devices.Channeling
                     input = Console.ReadLine();
                     break;
                 default:
-                    throw new Exception("Unknown ST register value."); // interrupt
+                    _processor.Pi = InterruptConstants.PiBadAssignment;
+                    return;
             }
 
             if (input == null)
@@ -158,10 +161,11 @@ namespace DoorsOS.Devices.Channeling
                     }
                     break;
                 case ChannelingDeviceConstants.ToConsole:
-                    Console.WriteLine(input);
+                    Console.Write(input);
                     break;
                 default:
-                    throw new Exception("Unknown DT register value."); // interrupt
+                    _processor.Pi = InterruptConstants.PiBadAssignment;
+                    return;
             }
         }
 

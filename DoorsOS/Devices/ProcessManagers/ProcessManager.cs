@@ -20,6 +20,7 @@ namespace DoorsOS.Devices.ProcessManagers
 
         public void StartReadyProcess()
         {
+            ActiveProcess?.SaveState();
             if (ReadyProcesses.Count != 0)
             {
                 ActiveProcess = ReadyProcesses[0];

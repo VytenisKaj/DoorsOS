@@ -21,6 +21,7 @@ namespace DoorsOS.VirtualMachines
             C = processor.C;
             Cs = processor.Cs;
             Ds = processor.Ds;
+            Ic = processor.Ic;
         }
 
         public void Load(IProcessor processor)
@@ -31,6 +32,7 @@ namespace DoorsOS.VirtualMachines
             processor.C = C;
             processor.Cs = Cs;
             processor.Ds = Ds;
+            processor.Ic = Ic;
         }
     }
 }
